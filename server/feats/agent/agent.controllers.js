@@ -516,7 +516,15 @@ async function converse(request) {
 
   logger.debug({ answer });
 
-  if (answer.intent === 'None') {
+  const scoreDomain  = await app.database.findOne(Model.Domain,{
+    'agent': agentId
+  })
+
+  const scoreAgent  = await app.database.findById(Model.Agent,{'_id' : agentId })
+
+  const scoreAgentOrDomain =  scoreAgent.domainClassifierThreshold >= scoreDomain.intentThreshold  ? scoreAgent.domainClassifierThreshold :  scoreDomain.intentThreshold
+
+  if (answer.intent === 'None' || answer.score < scoreAgentOrDomain) {
     const fallbackResponse = await getFallbackResponse(agentId);
 
     answer.srcAnswer = fallbackResponse;
